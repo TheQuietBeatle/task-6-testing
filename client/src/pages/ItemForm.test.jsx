@@ -44,6 +44,48 @@ describe('ItemForm — report mode (/items/new)', () => {
     expect(category).toHaveValue('other')
   })
 
-  test.todo('submitting POSTs { title, status, category, location, description } (no reportedBy) and navigates to /items')
-  test.todo('shows the server\'s message when the request fails (e.g. 409) and stays on the page')
+  test('submitting POSTs { title, status, category, location, description } (no reportedBy) and navigates to /items', async () => {
+    // Arrange: the fake API answers the POST successfully
+    api.post.mockResolvedValue({ data: { item: {} } })
+    renderAt('/items/new')
+
+    // Act: fill in every field like a user would, then click Save
+    await userEvent.type(screen.getByPlaceholderText(/title/i), 'Blue umbrella')
+    const [status, category] = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(status, 'found')
+    await userEvent.selectOptions(category, 'other')
+    await userEvent.type(screen.getByPlaceholderText(/location/i), 'Cafeteria')
+    await userEvent.type(screen.getByPlaceholderText(/description/i), 'Left near the door')
+    await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    // Assert: exactly one POST to /items with exactly these 5 fields (toHaveBeenCalledWith
+    // compares objects exactly, so an extra reportedBy field would make it fail)
+    expect(api.post).toHaveBeenCalledTimes(1)
+    expect(api.post).toHaveBeenCalledWith('/items', {
+      title: 'Blue umbrella',
+      status: 'found',
+      category: 'other',
+      location: 'Cafeteria',
+      description: 'Left near the door'
+    })
+    expect(api.post.mock.calls[0][1]).not.toHaveProperty('reportedBy')
+    // ...and the page navigated to /items
+    expect(await screen.findByText('Items page')).toBeInTheDocument()
+  })
+
+  test('shows the server\'s message when the request fails (e.g. 409) and stays on the page', async () => {
+    // Arrange: the fake API rejects the POST like the server does for a duplicate
+    api.post.mockRejectedValue({ response: { data: { message: 'Duplicate item at this location' } } })
+    renderAt('/items/new')
+
+    // Act: fill in the title and submit
+    await userEvent.type(screen.getByPlaceholderText(/title/i), 'Black backpack')
+    await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    // Assert: the server's message is shown...
+    expect(await screen.findByText('Duplicate item at this location')).toBeInTheDocument()
+    // ...and we did NOT navigate: still on the form, no "Items page"
+    expect(screen.queryByText('Items page')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /report item/i })).toBeInTheDocument()
+  })
 })

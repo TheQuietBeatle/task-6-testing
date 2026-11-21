@@ -47,11 +47,11 @@ Why bother?
 
 Common kinds of tests:
 
-| Kind | Tests… | In this task |
-|---|---|---|
-| Unit test | one small piece (a function, a component) in isolation | the `ItemForm` component, with the API faked |
-| Integration test | several pieces working together | real HTTP requests through Express → controllers → MongoDB |
-| End-to-end test | the whole app in a real browser | not in this task |
+| Kind             | Tests…                                                | In this task                                                 |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| Unit test        | one small piece (a function, a component) in isolation | the `ItemForm` component, with the API faked               |
+| Integration test | several pieces working together                        | real HTTP requests through Express → controllers → MongoDB |
+| End-to-end test  | the whole app in a real browser                        | not in this task                                             |
 
 ## What is Jest?
 
